@@ -362,9 +362,9 @@
                             <td class="text-center">{{ $key + 1 }}</td>
                             <td>
                                 <strong>{{ $item->name }}</strong>
-                                @if(!empty($item->description))
+                                <!-- @if(!empty($item->description))
                                     <br><span style="font-size: 8.5pt; color: var(--text-gray);">{{ $item->description }}</span>
-                                @endif
+                                @endif -->
                             </td>
                             <td class="text-center">{{ $item->quantity }}</td>
                             <td class="text-right">{{ currency_format_with_sym($item->price, $invoice->created_by, $invoice->workspace) }}</td>
@@ -429,7 +429,7 @@
             </table>
         </div>
 
-        <div class="clearfix" style="margin-top: 40px;">
+        <!-- <div class="clearfix" style="margin-top: 40px;">
             <strong style="font-size: 11pt;">{{ __('Bank Details') }}:</strong>
             <table class="bank-details">
                 <thead>
@@ -459,7 +459,7 @@
                     @endif
                 </tbody>
             </table>
-        </div>
+        </div> -->
 
         <div class="invoice-footer">
             <p> 
