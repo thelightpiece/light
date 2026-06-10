@@ -361,7 +361,9 @@
                         <tr>
                             <td class="text-center">{{ $key + 1 }}</td>
                             <td>
-                                <strong>{{ $item->name }}</strong>
+                                <strong>
+                                    {{ !empty($item->product()) ? $item->product()->name : '' }}
+                                </strong>
                                 <!-- @if(!empty($item->description))
                                     <br><span style="font-size: 8.5pt; color: var(--text-gray);">{{ $item->description }}</span>
                                 @endif -->
