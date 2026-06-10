@@ -161,7 +161,7 @@
                 dpi: 72,
                 letterRendering: true
             },
-            jsPDF: { unit: 'in', format: 'A4', orientation: 'landscape' }
+            jsPDF: { unit: 'in', format: 'A4', orientation: 'portrait' }
         };
 
         html2pdf().set(opt).from(element).save().then(function () {
