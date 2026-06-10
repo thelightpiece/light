@@ -1,7 +1,9 @@
 @php
     /**
      * Template Invoice PDF - Full Width Fluid Layout
-     * Perbaikan Final: Menggunakan method product() untuk memanggil nama barang.
+     * Mengatur tampilan cetak invoice dengan lebar 100% dinamis.
+     * Mencegah distorsi scaling (efek kaca pembesar) pada html2pdf dengan
+     * menghapus max-width dan menggunakan tipografi berbasis Point (pt).
      */
 @endphp
 <!DOCTYPE html>
@@ -29,7 +31,7 @@
         body {
             font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
             color: var(--text-dark);
-            font-size: 10pt;
+            font-size: 10pt; /* Menggunakan pt agar stabil saat diprint */
             line-height: 1.5;
             margin: 0;
             padding: 0;
@@ -37,6 +39,9 @@
             -webkit-font-smoothing: antialiased;
         }
 
+        /* * Container dibuat 100% tanpa max-width agar menyesuaikan lebar 
+         * kertas (Landscape/Portrait) bawaan dari script jsPDF.
+         */
         .invoice-container {
             width: 100%;
             max-width: 100%; 
@@ -80,7 +85,7 @@
             line-height: 1.6;
         }
 
-        /* INVOICE META */
+        /* INVOICE META (Kanan Atas) */
         .meta-container {
             text-align: right;
         }
@@ -356,9 +361,7 @@
                         <tr>
                             <td class="text-center">{{ $key + 1 }}</td>
                             <td>
-                                <strong>
-                                    {{ !empty($item->product()) ? $item->product()->name : '' }}
-                                </strong>
+                                <strong>{{ $item->name }}</strong>
                                 <!-- @if(!empty($item->description))
                                     <br><span style="font-size: 8.5pt; color: var(--text-gray);">{{ $item->description }}</span>
                                 @endif -->
@@ -367,14 +370,7 @@
                             <td class="text-right">{{ currency_format_with_sym($item->price, $invoice->created_by, $invoice->workspace) }}</td>
                             <td class="text-right">{{ currency_format_with_sym($item->discount, $invoice->created_by, $invoice->workspace) }}</td>
                             <td class="text-right">
-                                @if (!empty($item->tax))
-                                    @php
-                                        $taxes = \App\Models\Utility::tax($item->tax);
-                                    @endphp
-                                    @foreach ($taxes as $tax)
-                                        <span>{{ !empty($tax) ? $tax->name : '' }}</span><br>
-                                    @endforeach
-                                @elseif (!empty($item->itemTax))
+                                @if (!empty($item->itemTax))
                                     @foreach ($item->itemTax as $taxes)
                                         <span>{{ $taxes['name'] }} ({{ $taxes['rate'] }})</span><br>
                                         <span>{{ currency_format_with_sym($taxes['tax_price'], $invoice->created_by, $invoice->workspace) }}</span><br>
