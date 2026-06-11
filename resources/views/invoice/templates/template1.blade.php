@@ -1,9 +1,17 @@
 @php
     /**
-     * Template Invoice PDF - Full Width Fluid Layout
-     * Mengatur tampilan cetak invoice dengan lebar 100% dinamis.
-     * Mencegah distorsi scaling (efek kaca pembesar) pada html2pdf dengan
-     * menghapus max-width dan menggunakan tipografi berbasis Point (pt).
+     * Template Invoice PDF - Premium Portrait Full-Modular Layout (Template 1)
+     * * Mengadopsi tata letak fluida penuh 100% lebar kertas tanpa pembatas piksel 
+     * untuk mencegah distorsi scaling (efek zoom/kaca pembesar) pada html2pdf.
+     * Logika penarikan nama item diintegrasikan secara penuh dengan arsitektur 
+     * multi-modul WorkDo (Fleet, RentalManagement, dll) berdasarkan referensi template2.
+     *
+     * @var array $settings Konfigurasi global data perusahaan/workspace.
+     * @var object $invoice Model Invoice yang membawa data tagihan dan status modul.
+     * @var object $customer Model customer untuk data billing & shipping.
+     * @var string $img URL/Path gambar logo perusahaan.
+     * @var string $color Kode warna hex untuk aksen tema invoice.
+     * @var array $bank_details_list Koleksi data rekening bank perusahaan.
      */
 @endphp
 <!DOCTYPE html>
@@ -31,7 +39,7 @@
         body {
             font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
             color: var(--text-dark);
-            font-size: 10pt; /* Menggunakan pt agar stabil saat diprint */
+            font-size: 10pt;
             line-height: 1.5;
             margin: 0;
             padding: 0;
@@ -39,9 +47,6 @@
             -webkit-font-smoothing: antialiased;
         }
 
-        /* * Container dibuat 100% tanpa max-width agar menyesuaikan lebar 
-         * kertas (Landscape/Portrait) bawaan dari script jsPDF.
-         */
         .invoice-container {
             width: 100%;
             max-width: 100%; 
@@ -85,7 +90,7 @@
             line-height: 1.6;
         }
 
-        /* INVOICE META (Kanan Atas) */
+        /* INVOICE METADATA (KANAN ATAS) */
         .meta-container {
             text-align: right;
         }
@@ -119,7 +124,7 @@
             width: 40%;
         }
 
-        /* CUSTOMER INFO */
+        /* CLIENT BILLING & SHIPPING */
         .info-table {
             width: 100%;
             margin-bottom: 25px;
@@ -144,7 +149,7 @@
             border: 1px solid var(--border-color);
         }
 
-        /* ITEMS TABLE */
+        /* TABEL RINCIAN ITEM BARANG */
         .items-table {
             width: 100%;
             border-collapse: collapse;
@@ -171,11 +176,10 @@
             background-color: var(--bg-light);
         }
 
-        /* TEXT ALIGNMENT */
         .text-right { text-align: right !important; }
         .text-center { text-align: center !important; }
 
-        /* SUMMARY TABLE */
+        /* RINGKASAN FINANSIAL (SUMMARY) */
         .summary-wrapper {
             width: 100%;
             margin-bottom: 30px;
@@ -204,7 +208,7 @@
             background-color: var(--bg-light);
         }
 
-        /* BANK DETAILS */
+        /* DETAIL PERBANKAN */
         .bank-details {
             width: 100%;
             margin-top: 20px;
@@ -274,6 +278,7 @@
                         @endif
                     </div>
                 </td>
+                
                 <td style="width: 40%;">
                     <div class="meta-container">
                         <div class="invoice-label">{{ __('INVOICE') }}</div>
@@ -362,7 +367,16 @@
                             <td class="text-center">{{ $key + 1 }}</td>
                             <td>
                                 <strong>
-                                    {{ !empty($item->product()) ? $item->product()->name : '' }}
+                                    {{-- Sinkronisasi Logika Modular Dinamis Berdasarkan Properti Modul Sistem --}}
+                                    @if ($invoice->invoice_module == 'Fleet')
+                                        {{ !empty($item->product()) ? $item->product()->vehicle_name : '' }}
+                                    @elseif ($invoice->invoice_module == 'RentalManagement')
+                                        {{ !empty($item->product()) ? $item->product()->name : '' }}
+                                    @elseif ($invoice->invoice_module == 'CMMS')
+                                        {{ !empty($item->product()) ? $item->product()->name : '' }}
+                                    @else
+                                        {{ !empty($item->product()) ? $item->product()->name : (!empty($item->item) ? $item->item : '') }}
+                                    @endif
                                 </strong>
                                 <!-- @if(!empty($item->description))
                                     <br><span style="font-size: 8.5pt; color: var(--text-gray);">{{ $item->description }}</span>
@@ -372,7 +386,14 @@
                             <td class="text-right">{{ currency_format_with_sym($item->price, $invoice->created_by, $invoice->workspace) }}</td>
                             <td class="text-right">{{ currency_format_with_sym($item->discount, $invoice->created_by, $invoice->workspace) }}</td>
                             <td class="text-right">
-                                @if (!empty($item->itemTax))
+                                @if (!empty($item->tax))
+                                    @php
+                                        $taxes = \App\Models\Utility::tax($item->tax);
+                                    @endphp
+                                    @foreach ($taxes as $tax)
+                                        <span>{{ !empty($tax) ? $tax->name : '' }}</span><br>
+                                    @endforeach
+                                @elseif (!empty($item->itemTax))
                                     @foreach ($item->itemTax as $taxes)
                                         <span>{{ $taxes['name'] }} ({{ $taxes['rate'] }})</span><br>
                                         <span>{{ currency_format_with_sym($taxes['tax_price'], $invoice->created_by, $invoice->workspace) }}</span><br>
